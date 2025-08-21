@@ -1,12 +1,14 @@
 # Tarea 1
 
-> Investiga al menos 4 microcontroladores de disntintas marcas y haz una tabla comparativa de:
-> Perifericos
-> Memoria
-> Ecosistema
-> Costos
-> Arquitectura
-> Velocidad de trabajo
+> Investiga al menos 4 microcontroladores de distintas marcas y haz una tabla comparativa de:  
+> - Periféricos  
+> - Memoria  
+> - Ecosistema  
+> - Costos  
+> - Arquitectura  
+> - Velocidad de trabajo
+
+
 
 ---
 

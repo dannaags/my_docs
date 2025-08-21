@@ -5,7 +5,7 @@
 
 ---
 
-## 1) ResumenHOLAwed
+## 1) Resumen
 
 - **Nombre del proyecto:** _Mi Proyecto_  
 - **Equipo / Autor(es):** _Nombre(s)_  
@@ -69,6 +69,5 @@ source .venv/bin/activate
 pip install -r requirements.txt
 # o, si es Node:
 npm install
-
 
 ```

@@ -1,17 +1,18 @@
 # Tarea 1
 
-> Plantilla genérica para documentar proyectos académicos o de ingeniería.  
-> Copia y adapta las secciones según tu necesidad.
+> Investiga al menos 4 microcontroladores de disntintas marcas y haz una tabla comparativa de:
+> Perifericos
+>Memoria
+>Ecosistema
+>Costos
+>Arquitectura
+>Velocidad de trabajo
 
 ---
 
-## 1) Resumen
+## 1) Proyecto
 
-- **Nombre del proyecto:** _Mi Proyecto_  
-- **Equipo / Autor(es):** _Nombre(s)_  
-- **Curso / Asignatura:** _Nombre del curso_  
-- **Fecha:** _DD/MM/AAAA_  
-- **Descripción breve:** _Una o dos líneas que expliquen qué hace y por qué._
+Lámpara que se iluminan al ritmo de tu corazón. 
 
 !!! tip "Consejo"
     Mantén este resumen corto (máx. 5 líneas). Lo demás va en secciones específicas.

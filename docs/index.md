@@ -4,4 +4,4 @@
 ---
 
 
-![Foto jumper](../recursos/imgs/jumper.jpg)
+![Foto jumper](recursos/imgs/jumper.jpg)

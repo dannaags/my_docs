@@ -2,11 +2,11 @@
 
 > Investiga al menos 4 microcontroladores de disntintas marcas y haz una tabla comparativa de:
 > Perifericos
->Memoria
->Ecosistema
->Costos
->Arquitectura
->Velocidad de trabajo
+> Memoria
+> Ecosistema
+> Costos
+> Arquitectura
+> Velocidad de trabajo
 
 ---
 

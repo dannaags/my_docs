@@ -5,7 +5,7 @@
 
 ---
 
-## 1) Resumen
+## 1) ResumenHOLAwed
 
 - **Nombre del proyecto:** _Mi Proyecto_  
 - **Equipo / Autor(es):** _Nombre(s)_  

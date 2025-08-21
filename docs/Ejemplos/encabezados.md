@@ -113,22 +113,22 @@
 # Imágenes
 
 ``` codigo
-![Diagrama del sistema](recursos/imgs/ibero.jpeg)
+![Diagrama del sistema](../recursos/imgs/ibero.jpeg)
 
 <!-- Control de tamaño usando HTML (cuando se requiera) -->
 <img src="../recursos/imgs/ibero.jpeg" alt="Diagrama del sistema" width="420">
 ```
 
-![Diagrama del sistema](recursos/imgs/ibero.jpeg)
+![Diagrama del sistema](../recursos/imgs/ibero.jpeg)
 
-<img src="../recursos/imgs/ibero.jpeg" alt="Diagrama del sistema" width="420">
+<img src="/recursos/imgs/ibero.jpeg" alt="Diagrama del sistema" width="420">
 
 ---
 
 # PDFs (enlace y embebido)
 
 ``` codigo
-[Descargar especificación (PDF)](recursos/archivos/Calendario.pdf)
+[Descargar especificación (PDF)](..recursos/archivos/Calendario.pdf)
 
 <!-- Embed (requiere navegador compatible) -->
 <object data="recursos/archivos/Calendario.pdf" type="application/pdf" width="100%" height="600">
@@ -136,7 +136,7 @@
 </object>
 ```
 
-[Descargar especificación (PDF)](recursos/archivos/Calendario.pdf)
+[Descargar especificación (PDF)](..recursos/archivos/Calendario.pdf)
 
 <object data="../recursos/archivos/Calendario.pdf" type="application/pdf" width="100%" height="600">
   <p>No se pudo mostrar el PDF. <a href="../recursos/archivos/Calendario.pdf">Descargar</a></p>

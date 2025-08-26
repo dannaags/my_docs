@@ -28,16 +28,16 @@ Lámpara que se iluminan al ritmo de tu corazón.
 | ATTiny85         | UART, I²C, SPI, ADC, PWM                                                     | 512 B SRAM, 8 KB Flash, 512 B EEPROM       | Arduino IDE                           | $20–50 MX    | AVR 8 bits                              | 8–20 MHz             |
 
 ---
-## 2) Ranking de elección
+## 3) Ranking de elección
 
-1.  ESP32
+1.  ESP32:
 Tiene buena memoria y velocidad, ademas de que cuenta con conexión WiFi/Bluetooth lo que a futuro podría facilitar el desarrollo de una aplicación. 
 
-2.  Raspberry Pi Pico
+2.  Raspberry Pi Pico:
 Cuenta con buena memoria pero por el tema de las futuras mejoras lo coloco en segundo lugar.
 
-3.  Arduino Nano
+3.  Arduino Nano:
 Es fácil de programar pero tambien tiene poca memoria y velocidad. 
 
-4.  ATTiny85
+4.  ATTiny85:
 Es el microcontrolador más económico pero tiene poca memoria, no podría controlar animaciones complejas en la lámpara. 

@@ -125,6 +125,7 @@ int main() {
 
 
 **Esquematico de conexión**
+![Diagrama del sistema](../recursos/imgs/esquematico_tarea2.jpg)
 
 
 **Video**

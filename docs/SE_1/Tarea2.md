@@ -123,6 +123,74 @@ int main() {
 
 **Código**
 
+```C++
+#include "pico/stdlib.h"
+#include "hardware/structs/sio.h"
+
+#define PIN_A 0
+#define PIN_B 1
+#define PIN_C 2
+#define PIN_D 3
+
+int main() {
+
+    // 2) Asegura función SIO en cada pin (necesario una sola vez)
+    gpio_init(0);
+    gpio_init(1);
+    gpio_init(2);
+    gpio_init(3);
+    // 3) Dirección: salida (OE=1) para TODOS los pines con UNA sola instrucción
+
+    uint32_t cont=0;
+
+    
+    sio_hw->gpio_oe_set = (1 << PIN_A);
+    sio_hw->gpio_oe_set = (1 << PIN_B);
+    sio_hw->gpio_oe_set = (1 << PIN_C);
+    sio_hw->gpio_oe_set = (1 << PIN_D);
+
+    while (true) {
+    
+        uint32_t sec = cont ^ (cont >> 1);
+
+        if (sec&0x1){
+            gpio_put(PIN_A,1);
+        }
+
+        else{
+            gpio_put(PIN_A,0);
+        }
+        
+        if (sec&0x2){
+            gpio_put(PIN_B,1);
+        }
+
+        else {
+            gpio_put(PIN_B,0);
+        }
+
+        if (sec&0x4){
+            gpio_put(PIN_C,1);	
+        }
+
+        else{
+            gpio_put(PIN_C,0);
+        }
+
+        if (sec&0x8){
+            gpio_put(PIN_D,1);		
+        }
+
+        else{
+            gpio_put(PIN_D,0);
+        }
+        cont++;
+        sleep_ms(500);
+
+}
+}
+
+```
 
 **Esquematico de conexión**
 ![Diagrama del sistema](../recursos/imgs/esquematico_tarea2.jpg)

@@ -2,6 +2,9 @@
 
 
 
-<embed src="../recursos/archivos/syllabus.pdf" type="application/pdf" width="100%" height="600px" />
-
+<iframe 
+  src="https://drive.google.com/file/d/14uLMuRHhecMQeRqQP_NuXIIIz4iHGDN-/view?usp=sharing" 
+  width="100%" 
+  height="600">
+</iframe>
 

@@ -1,4 +1,4 @@
-# Tarea 2
+# About Me
 
 Soy **Danna Paola García Sánchez**, estudiante de **Mecatrónica** en 5º semestre.  
 

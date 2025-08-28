@@ -54,7 +54,7 @@ int main() {
 
 
 **Video**
-
+[Ver video en YouTube](https://youtube.com/shorts/V5-u_odLcfA)
 
 ---
 
@@ -117,6 +117,9 @@ int main() {
 
 
 **Video**
+
+[Ver video en YouTube](https://youtube.com/shorts/7cmU_cujRNo)
+
 
 ---
 ## 3) Secuencia en codigo Gray
@@ -198,10 +201,5 @@ int main() {
 
 **Video**
 
-<iframe width="360" height="640"
-    src="https://www.youtube.com/embed/5_p5SqiWHKI"
-    title="YouTube Shorts"
-    frameborder="0"
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-    allowfullscreen>
-</iframe>
+[Ver video en YouTube](https://youtube.com/shorts/5_p5SqiWHKI)
+

@@ -10,10 +10,9 @@
 
 ---
 
-## 1) Proyecto
+## 1) Boceto
 
-Lámpara que se iluminan al ritmo de tu corazón. 
-
+![Boceto](../recursos/imgs/citizenquack.png)
 
 
 ---

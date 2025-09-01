@@ -14,37 +14,55 @@
 
 #include "pico/stdlib.h"
 #include "hardware/structs/sio.h"
-#define PIN_A 2
-#define PIN_B 4
-#define PIN_C 5
-#define PIN_D 6
+
+#define Boton_1 16
+#define Boton_2 17
+#define LED_1 0
+#define LED_2 1
+#define LED_3 2
 
 int main() {
-    // 1) Máscara con varios pines
-    const uint32_t MASK = (1u<<0) | (1u<<1) | (1u<<2)| (1u<<3);
 
-    // 2) Asegura función SIO en cada pin (necesario una sola vez)
-    gpio_init(0);
-    gpio_init(1);
-    gpio_init(2);
-    gpio_init(3);
-    // 3) Dirección: salida (OE=1) para TODOS los pines con UNA sola instrucción
-    gpio_set_dir_out_masked(MASK);
-    uint8_t contador=0;
+    gpio_init(Boton_1);
+    gpio_set_dir(Boton_1, false);
+
+    gpio_init(Boton_2);
+    gpio_set_dir(Boton_2, false);
+
+    gpio_init(LED_1);
+    gpio_set_dir(LED_1, true);
+
+    gpio_init(LED_2);
+    gpio_set_dir(LED_2, true);
+
+    gpio_init(LED_3);
+    gpio_set_dir(LED_3, true);
 
     while (true) {
+        bool b1 = gpio_get(Boton_1);
+        bool b2 = gpio_get(Boton_2);
 
-        gpio_put_masked(MASK, contador);
-        sleep_ms(500);
-        
-        contador++;
-
-        if (contador>=16){
-            contador=0;
+        if (!b1 && !b2) {
+            gpio_put(LED_1, 1);
+        } else {
+            gpio_put(LED_1, 0);
         }
-}
-}
 
+        if (!b1 || !b2) {
+            gpio_put(LED_2, 1);
+        } else {
+            gpio_put(LED_2, 0);
+        }
+
+        if ((b1 && !b2) || (!b1 && b2)) {
+            gpio_put(LED_3, 1);
+        } else {
+            gpio_put(LED_3, 0);
+        }
+
+        sleep_ms(10); 
+    }
+}
 
 
 ```
@@ -55,7 +73,7 @@ int main() {
 
 **Video**
 
-[Ver video en YouTube](https://youtube.com/shorts/V5-u_odLcfA)
+<iframe width="560" height="315" src="https://www.youtube.com/embed/MD8Lvo2fJZ4?si=GZWm4bQJwXlk-F4J" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 ---
 
@@ -92,27 +110,32 @@ int main(void) {
     gpio_pull_up(BTN2); 
 
     int pos=LED1;
+    int preb1 = 1;
+    int preb2 = 1;
 
     while (true) {
 
-        if (gpio_get(BTN1)==0){
+        if (gpio_get(BTN1)==0 && preb1 == 1){
             if(pos==LED4) pos=LED1;
             else 
             pos++;
             gpio_put_masked(MASK, (1u<<pos));
-            sleep_ms(200);
         }
 
-        if (gpio_get(BTN2)==0){
+        if (gpio_get(BTN2)==0 && preb2 == 1){
 
             if (pos==LED1)pos=LED4;
             else 
             pos--;
             gpio_put_masked(MASK, (1u<<pos));
-            sleep_ms(200);
         }
 
-    }
+        preb1 = gpio_get(BTN1);
+        preb2 = gpio_get(BTN2);
+
+        sleep_ms (200);
+
+    }
 }
 
 ```
@@ -124,7 +147,7 @@ int main(void) {
 
 **Video**
 
-[Ver video en YouTube](https://youtube.com/shorts/1cDOuaCSxCE?feature=share)
+<iframe width="560" height="315" src="https://youtu.be/JhIcp5XxHQ0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 
 ---

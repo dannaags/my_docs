@@ -61,7 +61,7 @@ int main() {
 
 ## 2) Selector cíclico de 4 LEDs con avance/retroceso
 
-Mantén un único LED encendido entre LED0..LED3. Un botón![alt text](esquematico1_tarea3.jpg) AVANZA (0→1→2→3→0) y otro RETROCEDE (0→3→2→1→0). Un push = un paso (antirrebote por flanco: si dejas presionado no repite). En el video demuestra en ambos sentidos.
+Mantén un único LED encendido entre LED0..LED3. Un botón AVANZA (0→1→2→3→0) y otro RETROCEDE (0→3→2→1→0). Un push = un paso (antirrebote por flanco: si dejas presionado no repite). En el video demuestra en ambos sentidos.
 
 **Código**
 

@@ -1,12 +1,10 @@
 # Tarea 4
 
-> Documenta en tu página los siguientes códigos usando lógica y máscaras
+> Programar un mini-Pong con 5 LEDs en línea y 2 botones usando interrupciones (ISR) para registrar el “golpe” del jugador exactamente cuando la “pelota” (un LED encendido) llega al extremo de su lado.
 
 ---
 
 ## 1) Ping pong
-
-Programar un mini-Pong con 5 LEDs en línea y 2 botones usando interrupciones (ISR) para registrar el “golpe” del jugador exactamente cuando la “pelota” (un LED encendido) llega al extremo de su lado.
 
 # Reglas del juego
 

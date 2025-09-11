@@ -1,6 +1,6 @@
 # Semana 3
 
-## 1) Syllabus
+## 1) Presentación
 
 [Presentación (PDF)](\rec\arch\Citizen_quack.pdf)
 

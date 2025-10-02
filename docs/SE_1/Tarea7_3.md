@@ -94,9 +94,14 @@ int main() {
 ```
 **Captura**
 
+SIN FILTRO
+
+![Captura del osciloscopio](../recursos/imgs/tarea7_osciloscopio_sinfiltro.jpg)
+
+
+CON FILTRO
+
 ![Captura del osciloscopio](../recursos/imgs/tarea7.3_seno.png)
-
-
 
 
 ---

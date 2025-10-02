@@ -3,6 +3,9 @@
 
 ## 1) Control de Frecuencia — Canción con Buzzer
 
+!!! note "PUNTO EXTRA"
+    PUNTO EXTRA
+
 
 Programar un buzzer piezoeléctrico para reproducir una melodía reconocible.
 

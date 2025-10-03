@@ -40,3 +40,21 @@
 
 
 ---
+
+
+## 4)Tabla Propuesta de Valor
+
+[Descargar especificación (PDF)](\rec\arch\propuestadevalor.pdf)
+
+<object data="..\rec\arch\propuestadevalor.pdf" type="application/pdf" width="100%" height="600">
+  <p>No se pudo mostrar el PDF. <a href="..\rec\arch\propuestadevalor.pdf">Descargar</a></p>
+</object>
+
+
+---
+
+## 4) Propuesta de Valor
+
+**Olvídate de complicaciones y pruebas costosas. Con nuestro sistema sabes al instante cómo está tu agua y prevé los problemas.**
+
+---

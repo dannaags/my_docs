@@ -55,6 +55,6 @@
 
 ## 4) Propuesta de Valor
 
-**Olvídate de complicaciones y pruebas costosas. Con nuestro sistema sabes al instante cómo está tu agua y prevé los problemas.**
+**Olvídate de complicaciones y pruebas costosas. Con nuestro sistema sabes al instante cómo está tu agua y con esto prevé los problemas.**
 
 ---

@@ -115,354 +115,268 @@ El movimiento de un servo requiere:
 
 ```C++
 #include "pico/stdlib.h"
-#include <stdio.h>
 #include "hardware/pwm.h"
-#include "hardware/gpio.h"
-#include <string.h> 
+#include <stdio.h>
+#include <string>
+using namespace std;
 
-#define BOTON_MODO 11
+
+#define BUTTON_MODE 14
 #define BOTON_NEXT 13
-#define BOTON_PREV 14
-#define PWM 10
-#define SERVO_MIN_US 500  //Valores que se pusieron despues de mapear nuestro servo
-#define SERVO_MAX_US 2500
+#define BOTON_PREV 11
+#define SERVO_PIN 15
 
-static int modo = 0; // 0=Entrenamiento, 1=Continuo, 2=Step
-static int inicio_step = -1;  // índice actual para modo Step y es -1 porque no se ha seleccionado ninguna posición
-static int inicio_cont = -1; // índice actual para modo Continuo es -1 porque no ha comenzado la secuencia
-static uint32_t last_ms = 0; // tiempo del último movimiento en modo continuo
-static const uint32_t PERIODO_MS = 1500; // tiempo entre movimientos en modo continuo
 
-#define REBOTE 200 //Tiempo de rebote para nuestros botones
-static volatile bool g_btn_mode = false;
-static volatile bool g_btn_next = false;
-static volatile bool g_btn_prev = false;
-static volatile uint32_t t_last_mode = 0;
-static volatile uint32_t t_last_next = 0;
-static volatile uint32_t t_last_prev = 0;
+volatile int modo = 1;
+volatile bool boton_modo_presionado = false;
+volatile bool boton_next_presionado = false;
+volatile bool boton_prev_presionado = false;
 
-#define CMD_BUFFER_SIZE 32
-static char cmd_buffer[CMD_BUFFER_SIZE];
-static int cmd_len = 0;
+string comando = "";
+int lista[10];
+int cantidad = 0;
+uint slice_num;
 
-// arreglo para guardar las posiciones
-int Posiciones[10];
+void cambio_modo(uint gpio, uint32_t events) {
+    static uint32_t last_time = 0;
+    uint32_t now = to_ms_since_boot(get_absolute_time());
+    if (now - last_time < 200) return; // debounce 200 ms
+    last_time = now;
+
+    if (gpio == BUTTON_MODE)
+        boton_modo_presionado = true;
+    else if (gpio == BOTON_NEXT)
+        boton_next_presionado = true;
+    else if (gpio == BOTON_PREV)
+        boton_prev_presionado = true;
+}
 
 // PARA EL SERVO
-static uint servo_slice = 0;
-static uint servo_chan  = 0;
-static const uint16_t SERVO_TOP = 20000;
-static const float    SERVO_DIV = 150.0f;
+void configurar_servo() {
+    gpio_set_function(SERVO_PIN, GPIO_FUNC_PWM);
+    slice_num = pwm_gpio_to_slice_num(SERVO_PIN);
 
-
-void servo_pwm_init() {
-    gpio_set_function(PWM, GPIO_FUNC_PWM);
-    servo_slice = pwm_gpio_to_slice_num(PWM);
-    servo_chan  = pwm_gpio_to_channel(PWM);
-    pwm_set_clkdiv(servo_slice, SERVO_DIV);
-    pwm_set_wrap(servo_slice, SERVO_TOP);
-    uint16_t mid = (SERVO_MIN_US + SERVO_MAX_US) / 2; //Para el valor medio del servo
-    pwm_set_chan_level(servo_slice, servo_chan, mid);
-    pwm_set_enabled(servo_slice, true);
+    pwm_set_clkdiv(slice_num, 125.0f);
+    pwm_set_wrap(slice_num, 20000);
+    pwm_set_enabled(slice_num, true);
 }
 
-void servo_mover_grados(int deg) {
-    if (deg < 0)  deg = 0;
-    if (deg > 180) deg = 180;
-    int us = SERVO_MIN_US + (deg * (SERVO_MAX_US - SERVO_MIN_US)) / 180;
-    pwm_set_chan_level(servo_slice, servo_chan, (uint16_t)us);
-    printf("Servo -> %d° \n", deg);
+void mover_servo(int angulo) {
+    if (angulo < 0) angulo = 0;
+    if (angulo > 180) angulo = 180;
+
+    int pulso_us = 500 + (angulo * 2000) / 180;
+    pwm_set_gpio_level(SERVO_PIN, pulso_us);
+    printf("Servo en %d°\n", angulo);
 }
 
-// MODOS
+// MODO 1 : ENTRENAMIENTO
+void modo1() {
+    printf("\nModo 1: Control de lista\n");
+    printf("Comandos: escribir, reemplazar, borrar (terminar con ';')\n> ");
 
-
-static bool hay_lista() {
-    for (int i=0;i<10;i++) if (Posiciones[i] >= 0 && Posiciones[i] <= 180) return true;
-    return false;
-}
-static int obtener_primero() {
-    for (int i=0;i<10;i++) if (Posiciones[i] >= 0 && Posiciones[i] <= 180) return i;
-    return -1;
-}
-static int obtener_siguiente(int i) {
-    if (i < 0) return obtener_primero();
-    for (int k=i+1;k<10;k++) if (Posiciones[k] >= 0 && Posiciones[k] <= 180) return k;
-    return -1; // -1 significa que es el último válido
-}
-static int obtener_anterior(int i) {
-    if (i < 0) return obtener_primero();
-    for (int k=i-1;k>=0;k--) if (Posiciones[k] >= 0 && Posiciones[k] <= 180) return k;
-    return i;
-}
-static void imprimir_pos(int idx) {
-    printf("pos%d: %d\n", idx+1, Posiciones[idx]);
-}
-
-// INTERRUPCIÓN GPIO
-
-
-static void boton_isr(uint gpio, uint32_t events) {
-    if (events & GPIO_IRQ_EDGE_RISE) {
-        uint32_t now = to_ms_since_boot(get_absolute_time());
-        if (gpio == BOTON_MODO) {
-            if (now - t_last_mode > REBOTE) {
-                g_btn_mode = true;
-                t_last_mode = now;
-            }
-        } else if (gpio == BOTON_NEXT) {
-            if (now - t_last_next > REBOTE) {
-                g_btn_next = true;
-                t_last_next = now;
-            }
-        } else if (gpio == BOTON_PREV) {
-            if (now - t_last_prev > REBOTE) {
-                g_btn_prev = true;
-                t_last_prev = now;
-            }
-        }
-    }
-}
-
-void borrarPosiciones() {
-    for(int i = 0; i < 10; i++) Posiciones[i] = -1;
-    printf("Todas las posiciones han sido borradas.\n");
-}
-
-void escribirPosiciones() {
-    printf("\nIngrese posiciones (0-180) separadas por comas y termine con ';'\n");
-    printf("Ejemplo: 10,45,90,180;\n");
-    for(int i=0;i<10;i++) Posiciones[i] = -1;
-    int numPos = 0;
-    int val = 0;
-    bool leyendoNumero = false;
-    bool terminado = false;
-    while (!terminado) {
-        int ch = getchar_timeout_us(10000);
+    comando = "";
+    char c;
+    while (true) {
+        if (boton_modo_presionado) return;
+        int ch = getchar_timeout_us(0);
         if (ch == PICO_ERROR_TIMEOUT) continue;
-        if (ch == '\r' || ch == '\n') continue;
-        char c = (char)ch;
-        printf("%c", c);
-        if (c >= '0' && c <= '9') {
-            if (!leyendoNumero) { val = 0; leyendoNumero = true; }
-            val = val * 10 + (c - '0');
-            if (val > 1000000) { leyendoNumero = false; val = 0; }
-        } else if (c == ',' || c == ';') {
-            if (leyendoNumero) {
-                if (numPos >= 10) {
-                    printf("\nSe excedió el límite de 10 posiciones. Se usan solo las primeras 10.\n");
-                } else {
-                    if (val >= 0 && val <= 180) {
-                        Posiciones[numPos] = val;
-                        printf("\nPosición %d guardada: %d°\n", numPos, val);
-                        numPos++;
-                    } else {
-                        printf("\nValor inválido '%d'. Debe estar entre 0 y 180. Ignorado.\n", val);
-                    }
-                }
-            }
-            val = 0;
-            leyendoNumero = false;
-            if (c == ';') terminado = true;
-        }
-    }
-    printf("\nSe guardaron %d posiciones.\n", numPos);
-}
-
-void reemplazarPosicion() {
-    printf("\nIgrese la posicion que desea reemplazar y el valor que quiere seguido de una ,\n");
-    int pos = -1, val = -1;
-    int current_num = 0;
-    bool reading_index = true;
-    bool reading_value = false;
-    bool terminado = false;
-
-    while (!terminado) {
-        int ch = getchar_timeout_us(10000);
-        if (ch == PICO_ERROR_TIMEOUT || ch == '\r' || ch == '\n' || ch == ' ') continue;
-
-        char c = (char)ch;
-        printf("%c", c);
-
-        if (c >= '0' && c <= '9') {
-            current_num = current_num * 10 + (c - '0');
-        } else if (c == ',') {
-            if (reading_index) {
-                pos = current_num;
-                current_num = 0;
-                reading_index = false;
-                reading_value = true;
-            } else {
-                printf("\nError de formato: coma inesperada.\n"); terminado = true;
-            }
-        } else if (c == ';') {
-            if (reading_value) {
-                val = current_num;
-                terminado = true;
-            } else {
-                printf("\nError de formato: punto y coma inesperado.\n"); terminado = true;
-            }
-        } else {
-            printf("\nError de formato: carácter '%c' inesperado.\n", c); terminado = true;
-        }
+        c = (char)ch;
+        if (c == ';') break;
+        comando += c;
     }
 
-    if (pos >= 0 && pos < 10 && val >= 0 && val <= 180) {
-        if (Posiciones[pos] != -1) {
-            printf("\nReemplazando posición %d: %d° → %d°\n", pos, Posiciones[pos], val);
-            Posiciones[pos] = val;
-        } else {
-            printf("\nError: La posición %d está vacía.\n", pos);
-        }
-    } else if (pos != -1 || val != -1) {
-         printf("\nError: índice (%d) o valor (%d) fuera de rango, o formato incorrecto.\n", pos, val);
-    }
-}
-
-void mostrarPosiciones() {
-    printf("\n=== Posiciones Actuales ===\n");
-    bool hay = false;
-    for(int i = 0; i < 10; i++) {
-        if(Posiciones[i] != -1) { printf("Posición %d: %d°\n", i, Posiciones[i]); hay = true; }
-    }
-    if(!hay) printf("No hay posiciones guardadas.\n");
-    printf("========================\n");
-}
-
-static void continuo_tick() {
-    uint32_t ms = to_ms_since_boot(get_absolute_time());
-    if (ms - last_ms < PERIODO_MS) return;
-    last_ms = ms;
-    if (!hay_lista()) { printf("Error: no hay posiciones guardadas.\n"); return; }
-    if (inicio_cont < 0) {
-        inicio_cont = obtener_primero();
-    } else {
-        int siguiente = obtener_siguiente(inicio_cont);
-        if (siguiente == -1) {
-            inicio_cont = obtener_primero();
-            printf("Reiniciando lista...\n");
-        } else {
-            inicio_cont = siguiente;
-        }
-    }
-    if (inicio_cont >= 0) {
-        servo_mover_grados(Posiciones[inicio_cont]);
-        imprimir_pos(inicio_cont);
-    }
-}
-
-static void step_handle_buttons() {
-    if (!hay_lista()) {
-        if (g_btn_next || g_btn_prev) printf("Error no hay pos\n");
-        g_btn_next = false; g_btn_prev = false;
+    // BORRAR
+    if (comando == "borrar") {
+        cantidad = 0;
+        printf("OK. Lista borrada.\n");
         return;
     }
-    if (inicio_step < 0) inicio_step = obtener_primero();
-    if (g_btn_next) {
-        g_btn_next = false;
-        int nuevo = obtener_siguiente(inicio_step);
-        if (nuevo >= 0) inicio_step = nuevo;
-        servo_mover_grados(Posiciones[inicio_step]);
-        imprimir_pos(inicio_step);
+
+    //ESCRIBIR
+    if (comando == "escribir") {
+        printf("Ingrese valores (0–180) separados por comas, termine con ';'\n> ");
+        cantidad = 0;
+        string valor = "";
+        while (true) {
+            if (boton_modo_presionado) return;
+            int ch = getchar_timeout_us(0);
+            if (ch == PICO_ERROR_TIMEOUT) continue;
+            char c = (char)ch;
+
+            if ((c == ',' || c == ';') && valor != "") {
+                int num = atoi(valor.c_str());
+                if (num < 0 || num > 180) {
+                    printf("Error argumento invalido\n");
+                    return;
+                }
+                lista[cantidad++] = num;
+                valor = "";
+                if (c == ';') break;
+            } else if (c != ',' && c != ' ') {
+                valor += c;
+            }
+
+            if (c == ';') break;
+        }
+
+        if (cantidad == 0) {
+            printf("Error argumento invalido\n");
+        } else {
+            printf("OK. Lista: ");
+            for (int i = 0; i < cantidad; i++) {
+                printf("%d", lista[i]);
+                if (i < cantidad - 1) printf(", ");
+            }
+            printf("\n");
+        }
+        return;
     }
-    if (g_btn_prev) {
-        g_btn_prev = false;
-        int nuevo = obtener_anterior(inicio_step);
-        inicio_step = nuevo;
-        servo_mover_grados(Posiciones[inicio_step]);
-        imprimir_pos(inicio_step);
+
+    // REEMPLAZAR
+    if (comando == "reemplazar") {
+        if (cantidad == 0) {
+            printf("No hay valores en la lista.\n");
+            return;
+        }
+
+        printf("Ingrese índice y nuevo valor separados por coma, termine con ';'\n> ");
+        string valor = "";
+        int datos[2];
+        int n = 0;
+
+        while (true) {
+            if (boton_modo_presionado) return;
+            int ch = getchar_timeout_us(0);
+            if (ch == PICO_ERROR_TIMEOUT) continue;
+            char c = (char)ch;
+
+            if ((c == ',' || c == ';') && valor != "") {
+                datos[n++] = atoi(valor.c_str());
+                valor = "";
+                if (c == ';' || n == 2) break;
+            } else if (c != ',' && c != ' ') {
+                valor += c;
+            }
+
+            if (c == ';') break;
+        }
+
+        if (n < 2) {
+            printf("Error argumento invalido\n");
+            return;
+        }
+
+        int i = datos[0] - 1;
+        int v = datos[1];
+        if (i < 0 || i >= cantidad) {
+            printf("Error indice invalido\n");
+            return;
+        }
+        if (v < 0 || v > 180) {
+            printf("Error argumento invalido\n");
+            return;
+        }
+
+        lista[i] = v;
+        printf("OK. Lista actualizada: ");
+        for (int j = 0; j < cantidad; j++) {
+            printf("%d", lista[j]);
+            if (j < cantidad - 1) printf(", ");
+        }
+        printf("\n");
+        return;
+    }
+
+    printf("Comando no reconocido.\n");
+}
+
+//MODO 2 CONTINUO
+void modo2() {
+    printf("\nModo 2: Movimiento continuo\n");
+    if (cantidad == 0) {
+        printf("No hay valores en la lista.\n");
+        sleep_ms(500);
+        return;
+    }
+
+    printf("Moviendo continuamente según lista...\n");
+    while (!boton_modo_presionado) {
+        for (int i = 0; i < cantidad; i++) {
+            mover_servo(lista[i]);
+            sleep_ms(1500);
+            if (boton_modo_presionado) return;
+        }
     }
 }
 
+// MODO 3 PASO A PASO
+void modo3() {
+    if (cantidad == 0) {
+        printf("No hay valores en la lista.\n");
+        sleep_ms(500);
+        return;
+    }
 
+    static int indice = 0;
+    mover_servo(lista[indice]);
 
-void manejar_comando(const char* comando) {
-    if (strcmp(comando, "Borrar") == 0){
-        borrarPosiciones();
-    } else if (strcmp(comando, "Escribir") == 0){
-        escribirPosiciones();
-    } else if (strcmp(comando, "Mostrar") == 0) {
-        mostrarPosiciones();
-    } else if (strcmp(comando, "Reemplazar") == 0){
-        reemplazarPosicion();
-    } else if (comando[0] != '\0') {
-        printf("Instrucción inválida: '%s'\n", comando);
+    while (!boton_modo_presionado) {
+        if (boton_next_presionado) {
+            boton_next_presionado = false;
+            indice++;
+            if (indice >= cantidad) indice = 0;
+            mover_servo(lista[indice]);
+        }
+
+        if (boton_prev_presionado) {
+            boton_prev_presionado = false;
+            indice--;
+            if (indice < 0) indice = cantidad - 1;
+            mover_servo(lista[indice]);
+        }
+
+        sleep_ms(20);
     }
 }
 
+//CODIGO PRINCIPAL
 int main() {
     stdio_init_all();
-    servo_pwm_init();
-    servo_mover_grados(90);
-    borrarPosiciones();
+    sleep_ms(500);
 
-    gpio_init(BOTON_MODO); gpio_set_dir(BOTON_MODO, GPIO_IN); gpio_disable_pulls(BOTON_MODO);
-    gpio_init(BOTON_NEXT); gpio_set_dir(BOTON_NEXT, GPIO_IN); gpio_disable_pulls(BOTON_NEXT);
-    gpio_init(BOTON_PREV); gpio_set_dir(BOTON_PREV, GPIO_IN); gpio_disable_pulls(BOTON_PREV);
+    gpio_init(BUTTON_MODE);
+    gpio_set_dir(BUTTON_MODE, GPIO_IN);
 
-    gpio_set_irq_enabled_with_callback(BOTON_MODO, GPIO_IRQ_EDGE_RISE, true, &boton_isr);
-    gpio_set_irq_enabled(BOTON_NEXT, GPIO_IRQ_EDGE_RISE, true);
-    gpio_set_irq_enabled(BOTON_PREV, GPIO_IRQ_EDGE_RISE, true);
+    gpio_init(BOTON_NEXT);
+    gpio_set_dir(BOTON_NEXT, GPIO_IN);
 
-    sleep_ms(1500);
-    printf("\nMODOS: [0] Entrenamiento  [1] Continuo  [2] Step\n");
-    printf("Inicio en MODO 0 (Entrenamiento)\n");
+    gpio_init(BOTON_PREV);
+    gpio_set_dir(BOTON_PREV, GPIO_IN);
 
-    last_ms = to_ms_since_boot(get_absolute_time());
+    gpio_set_irq_enabled_with_callback(BUTTON_MODE, GPIO_IRQ_EDGE_RISE, true, &cambio_modo);
+    gpio_set_irq_enabled_with_callback(BOTON_NEXT, GPIO_IRQ_EDGE_RISE, true, &cambio_modo);
+    gpio_set_irq_enabled_with_callback(BOTON_PREV, GPIO_IRQ_EDGE_RISE, true, &cambio_modo);
+
+    configurar_servo();
+    printf("Programa iniciado. Modo 1.\n");
 
     while (true) {
-        if (g_btn_mode) {
-            g_btn_mode = false;
-            modo++; if (modo > 2) modo = 0;
-            g_btn_next = false; g_btn_prev = false;
-            if (modo == 0) {
-                printf("\n>> MODO 0: Entrenamiento\n");
-                cmd_len = 0;
-            } else if (modo == 1) {
-                printf("\n>> MODO 1: Continuo\n");
-                inicio_cont = -1;
-                last_ms = to_ms_since_boot(get_absolute_time());
-            } else {
-                printf("\n>> MODO 2: Step\n");
-                inicio_step = obtener_primero();
-                if (inicio_step >= 0) {
-                    servo_mover_grados(Posiciones[inicio_step]);
-                    imprimir_pos(inicio_step);
-                } else {
-                    printf("Error no hay pos\n");
-                }
-            }
+        if (boton_modo_presionado) {
+            boton_modo_presionado = false;
+            modo++;
+            if (modo > 3) modo = 1;
+            printf("\n--- Modo cambiado a: %d ---\n", modo);
         }
 
-        if (modo == 0) {
-            int ch_int = getchar_timeout_us(10000);
-            if (ch_int != PICO_ERROR_TIMEOUT) {
-                char ch = (char)ch_int;
-                if (ch != '\r' && ch != '\n' && ch != ';') {
-                    if (cmd_len < (CMD_BUFFER_SIZE - 2)) {
-                        cmd_buffer[cmd_len++] = ch;
-                    }
-                } else if (ch == ';') {
-                    printf("%c", ch);
-                    if (cmd_len > 0) {
-                        cmd_buffer[cmd_len] = '\0';
-                        manejar_comando(cmd_buffer);
-                    }
-                    cmd_len = 0;
-                } else {
-                    printf("%c", ch);
-                }
-            }
-        } else if (modo == 1) {
-            continuo_tick();
-        } else {
-            step_handle_buttons();
-        }
+        if (modo == 1) modo1();
+        else if (modo == 2) modo2();
+        else if (modo == 3) modo3();
 
-        tight_loop_contents();
+        sleep_ms(50);
     }
-    return 0;
 }
+
 
 ```
 
